@@ -4,7 +4,7 @@ import json
 from datetime import datetime, timezone
 from groq import Groq
 
-MODEL = "llama-3.3-70b-versatile"
+MODEL = "openai/gpt-oss-20b"
 STATE_FILE = "neon_state.json"
 
 SYSTEM_PROMPT = """
