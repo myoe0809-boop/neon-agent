@@ -1,9 +1,10 @@
+
 import os
 import json
 from datetime import datetime, timezone
-from google import genai
+from groq import Groq
 
-MODEL = "gemini-2.5-flash"
+MODEL = "llama-3.3-70b-versatile"
 STATE_FILE = "neon_state.json"
 
 SYSTEM_PROMPT = """
@@ -34,11 +35,11 @@ def save_state(state):
         json.dump(state, f, ensure_ascii=False, indent=2)
 
 def main():
-    api_key = os.environ.get("GEMINI_API_KEY")
+    api_key = os.environ.get("GROQ_API_KEY")
     if not api_key:
-        raise RuntimeError("GEMINI_API_KEY secret is missing.")
+        raise RuntimeError("GROQ_API_KEY secret is missing.")
 
-    client = genai.Client(api_key=api_key)
+    client = Groq(api_key=api_key)
     state = load_state()
 
     prompt = f"""
@@ -58,12 +59,16 @@ def main():
     Do not invent market research or claim to have published anything.
     """
 
-    response = client.models.generate_content(
+    response = client.chat.completions.create(
         model=MODEL,
-        contents=SYSTEM_PROMPT + "\n\n" + prompt
+        messages=[
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.7
     )
 
-    report = response.text or "No response generated."
+    report = response.choices[0].message.content or "No response generated."
 
     state["runs"] += 1
     state["history"].append({
